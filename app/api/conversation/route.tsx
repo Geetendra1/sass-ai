@@ -1,6 +1,6 @@
 import { auth } from "@clerk/nextjs";
 import { NextResponse } from "next/server";
-import { Configuration, OpenAIApi } from "openai";
+import { ChatCompletionRequestMessage,Configuration, OpenAIApi } from "openai";
 
 import { checkSubscription } from "@/lib/subscription";
 import { incrementApiLimit, checkApiLimit } from "@/lib/api-limit";
@@ -10,6 +10,11 @@ const configuration = new Configuration({
 });
 
 const openai = new OpenAIApi(configuration);
+
+const instructionMessage: ChatCompletionRequestMessage = {
+  role: "system",
+  content: "You are a knowledgeable virtual assistant designed to assist with answering the question asked by the {user}. You are a swift and knowledgeable virtual assistant designed to assist with a variety of tasks. Strive to provide rapid and accurate information while maintaining a friendly and helpful tone in your responses."
+};
 
 export async function POST(
   req: Request
@@ -41,7 +46,12 @@ export async function POST(
 
     const response = await openai.createChatCompletion({
       model: "gpt-3.5-turbo",
-      messages
+      temperature: 0.888,
+      max_tokens: 2048,
+      frequency_penalty: 0,
+      presence_penalty: 0,
+      top_p: 1,
+      messages:[instructionMessage, ...messages]
     });
 
     if (!isPro) {
